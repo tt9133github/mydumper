@@ -52,4 +52,9 @@ struct restore_job {
   guint part;
 };
 
+struct db_table {
+  char *database;
+  char *table;
+  guint64 rows;
+};
 #endif
