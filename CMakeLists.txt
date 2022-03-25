@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 project(mydumper)
-set(VERSION 0.11.6)
+set(VERSION 0.12.2)
 set(ARCHIVE_NAME "${CMAKE_PROJECT_NAME}-${VERSION}")
 
 #Required packages
@@ -46,21 +46,22 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DI
 SET( SHARED_SRCS src/server_detect.c src/connection.c src/logging.c src/set_verbose.c src/common.c src/tables_skiplist.c src/regex.c )
 SET( ZSTD_SRCS zstd/zstd_zlibwrapper.c zstd/gzclose.c zstd/gzlib.c zstd/gzread.c zstd/gzwrite.c )
 SET( MYDUMPER_SRCS mydumper.c ${SHARED_SRCS} src/mydumper_start_dump.c src/mydumper_jobs.c src/mydumper_common.c src/mydumper_stream.c src/mydumper_database.c src/mydumper_working_thread.c src/mydumper_daemon_thread.c )
-SET( MYLOADER_SRCS src/myloader.c ${SHARED_SRCS} src/myloader_stream.c src/myloader_stream.c src/myloader_process.c src/myloader_common.c src/myloader_jobs_manager.c src/myloader_directory.c src/myloader_restore.c src/myloader_restore_job.c src/myloader_control_job.c)
+SET( MYLOADER_SRCS src/myloader.c ${SHARED_SRCS} src/myloader_stream.c src/myloader_stream.c src/myloader_process.c src/myloader_common.c src/myloader_jobs_manager.c src/myloader_directory.c src/myloader_restore.c src/myloader_restore_job.c src/myloader_control_job.c )
+SET( COMMON_LIBRARIES ${MYSQL_LIBRARIES} ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES} ${PCRE_PCRE_LIBRARY} ${ZLIB_LIBRARIES} )
 
 if (WITH_ZSTD)
   add_executable(mydumper ${MYDUMPER_SRCS} ${ZSTD_SRCS})
-  target_link_libraries(mydumper ${MYSQL_LIBRARIES} ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES} ${GIO2_LIBRARIES} ${GOBJECT2_LIBRARIES} ${PCRE_PCRE_LIBRARY} ${ZLIB_LIBRARIES} ${ZSTD_LIBRARIES} stdc++ m )
+  target_link_libraries(mydumper ${COMMON_LIBRARIES} ${GIO2_LIBRARIES} ${GOBJECT2_LIBRARIES} ${ZSTD_LIBRARIES} stdc++ m )
 
   add_executable(myloader ${MYLOADER_SRCS} ${ZSTD_SRCS})
-  target_link_libraries(myloader ${MYSQL_LIBRARIES} ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES} ${PCRE_PCRE_LIBRARY} ${ZLIB_LIBRARIES} ${ZSTD_LIBRARIES} stdc++)
+  target_link_libraries(myloader ${COMMON_LIBRARIES} ${ZSTD_LIBRARIES} stdc++)
 
 else (WITH_ZSTD)
   add_executable(mydumper ${MYDUMPER_SRCS})
-  target_link_libraries(mydumper ${MYSQL_LIBRARIES} ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES} ${GIO2_LIBRARIES} ${GOBJECT2_LIBRARIES} ${PCRE_PCRE_LIBRARY} ${ZLIB_LIBRARIES} stdc++ m )
+  target_link_libraries(mydumper ${COMMON_LIBRARIES} ${GIO2_LIBRARIES} ${GOBJECT2_LIBRARIES} stdc++ m )
 
   add_executable(myloader ${MYLOADER_SRCS})
-  target_link_libraries(myloader ${MYSQL_LIBRARIES} ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES} ${PCRE_PCRE_LIBRARY} ${ZLIB_LIBRARIES} stdc++)
+  target_link_libraries(myloader ${COMMON_LIBRARIES} stdc++)
 endif (WITH_ZSTD)
 
 
@@ -85,6 +86,7 @@ ENDIF(RUN_CPPCHECK)
 
 MESSAGE(STATUS "------------------------------------------------")
 MESSAGE(STATUS "MYSQL_CONFIG = ${MYSQL_CONFIG}")
+MESSAGE(STATUS "MARIADB_CONFIG = ${MARIADB_CONFIG}")
 MESSAGE(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
 MESSAGE(STATUS "BUILD_DOCS = ${BUILD_DOCS}")
 MESSAGE(STATUS "WITH_ZSTD = ${WITH_ZSTD}")

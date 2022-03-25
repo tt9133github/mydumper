@@ -12,27 +12,25 @@
 #
 # Redistribution and use is allowed according to the terms of the BSD license.
 
-if(UNIX) 
-    set(MYSQL_CONFIG_PREFER_PATH "$ENV{MYSQL_HOME}/bin" CACHE FILEPATH
-        "preferred path to MySQL (mysql_config)")
-    find_program(MYSQL_CONFIG mysql_config
+
+function(INITIALIZE EXEC)
+    find_program(M_CONFIG ${EXEC}
         ${MYSQL_CONFIG_PREFER_PATH}
         /usr/local/mysql/bin/
         /usr/local/bin/
         /usr/bin/
         )
-    
-    if(MYSQL_CONFIG) 
-        message(STATUS "Using mysql-config: ${MYSQL_CONFIG}")
+    if(M_CONFIG)
+        message(STATUS "Using ${EXEC}: ${M_CONFIG}")
         # set CFLAGS
-        exec_program(${MYSQL_CONFIG}
+        exec_program(${M_CONFIG}
             ARGS --cflags
             OUTPUT_VARIABLE MY_TMP)
 
         set(MYSQL_CFLAGS ${MY_TMP} CACHE STRING INTERNAL)
 
         # set INCLUDE_DIR
-        exec_program(${MYSQL_CONFIG}
+        exec_program(${M_CONFIG}
             ARGS --include
             OUTPUT_VARIABLE MY_TMP)
 
@@ -41,7 +39,7 @@ if(UNIX)
         set(MYSQL_ADD_INCLUDE_DIR ${MY_TMP} CACHE FILEPATH INTERNAL)
 
         # set LIBRARY_DIR
-        exec_program(${MYSQL_CONFIG}
+        exec_program(${M_CONFIG}
             ARGS --libs_r
             OUTPUT_VARIABLE MY_TMP)
 
@@ -63,10 +61,20 @@ if(UNIX)
             list(APPEND MYSQL_ADD_LIBRARY_PATH "${MY_LIB}")
         endforeach(MY_LIB ${MYSQL_LIBS})
 
-    else(MYSQL_CONFIG)
+    else(M_CONFIG)
         set(MYSQL_ADD_LIBRARIES "")
         list(APPEND MYSQL_ADD_LIBRARIES "mysqlclient")
-    endif(MYSQL_CONFIG)
+    endif(M_CONFIG)
+endfunction()
+
+
+
+if(UNIX) 
+    set(MYSQL_CONFIG_PREFER_PATH "$ENV{MYSQL_HOME}/bin" CACHE FILEPATH
+        "preferred path to MySQL (mysql_config)")
+    initialize( mysql_config )
+    initialize( mariadb_config )
+
 else(UNIX)
     set(MYSQL_ADD_INCLUDE_DIR "c:/msys/local/include" CACHE FILEPATH INTERNAL)
     set(MYSQL_ADD_LIBRARY_PATH "c:/msys/local/lib" CACHE FILEPATH INTERNAL)
