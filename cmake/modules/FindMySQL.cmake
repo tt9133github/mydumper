@@ -35,9 +35,8 @@ function(INITIALIZE EXEC)
             OUTPUT_VARIABLE MY_TMP)
 
         string(REGEX REPLACE "-I([^ ]*)( .*)?" "\\1" MY_TMP "${MY_TMP}")
-
-        set(MYSQL_ADD_INCLUDE_DIR ${MY_TMP} CACHE FILEPATH INTERNAL)
-
+        set(TMP_MYSQL_ADD_INCLUDE_DIR ${MY_TMP} CACHE FILEPATH INTERNAL)
+        list(APPEND MYSQL_ADD_INCLUDE_DIR "${TMP_MYSQL_ADD_INCLUDE_DIR}")
         # set LIBRARY_DIR
         exec_program(${M_CONFIG}
             ARGS --libs_r
@@ -50,16 +49,19 @@ function(INITIALIZE EXEC)
             string(REGEX REPLACE "[ ]*-l([^ ]*)" "\\1" MY_LIB "${MY_LIB}")
             list(APPEND MYSQL_ADD_LIBRARIES "${MY_LIB}")
         endforeach(MY_LIB ${MYSQL_LIBS})
-
         string(REGEX MATCHALL " +-L[^ ]*" MYSQL_LIBDIR_LIST " ${MY_TMP}")
         foreach(MY_LIB ${MYSQL_LIBDIR_LIST})
             string(REGEX REPLACE "[ ]*-L([^ ]*)" "\\1" MY_LIB "${MY_LIB}")
-            list(APPEND MYSQL_ADD_LIBRARY_PATH "${MY_LIB}")
+            list(APPEND MYSQL_ADD_LIBRARY_PATH "${MY_LIB}" )
         endforeach(MY_LIB ${MYSQL_LIBS})
-
+        list(APPEND MYSQL_CONFIG "${EXEC}")
     else(M_CONFIG)
         list(APPEND MYSQL_ADD_LIBRARIES "mysqlclient")
     endif(M_CONFIG)
+    set (MYSQL_ADD_LIBRARIES  ${MYSQL_ADD_LIBRARIES} PARENT_SCOPE) 
+    set (MYSQL_ADD_LIBRARY_PATH ${MYSQL_ADD_LIBRARY_PATH} PARENT_SCOPE)
+    set (MYSQL_ADD_INCLUDE_DIR ${MYSQL_ADD_INCLUDE_DIR} PARENT_SCOPE)
+    set (MYSQL_CONFIG ${MYSQL_CONFIG} PARENT_SCOPE)
 endfunction()
 
 
@@ -69,7 +71,8 @@ if(UNIX)
         "preferred path to MySQL (mysql_config)")
     set(MYSQL_ADD_LIBRARIES "")
     set(MYSQL_ADD_LIBRARY_PATH "")
-    set(MYSQL_ADD_LIBRARIES "")
+    set(MYSQL_ADD_INCLUDE_DIR "")
+    set(MYSQL_CONFIG "")
     initialize( mysql_config )
     initialize( mariadb_config )
 
@@ -88,7 +91,6 @@ find_path(MYSQL_INCLUDE_DIR mysql.h
     /usr/include/mysql
     /usr/include/mysql/private
 )
-
 set(TMP_MYSQL_LIBRARIES "")
 set(CMAKE_FIND_LIBRARY_SUFFIXES .so .lib .so.1 .dylib .a)
 foreach(MY_LIB ${MYSQL_ADD_LIBRARIES})
@@ -96,16 +98,14 @@ foreach(MY_LIB ${MYSQL_ADD_LIBRARIES})
         HINTS
         ${MYSQL_ADD_LIBRARY_PATH}
         /usr/lib/mysql
-	/usr/lib
+        /usr/lib
         /usr/local/lib
         /usr/local/lib/mysql
         /usr/local/mysql/lib
     )
     list(APPEND TMP_MYSQL_LIBRARIES "${MYSQL_LIBRARIES_${MY_LIB}}")
 endforeach(MY_LIB ${MYSQL_ADD_LIBRARIES})
-
-set(MYSQL_LIBRARIES ${TMP_MYSQL_LIBRARIES} CACHE FILEPATH INTERNAL)
-
+set(MYSQL_LIBRARIES "${TMP_MYSQL_LIBRARIES}" CACHE FILEPATH INTERNAL)
 if(MYSQL_INCLUDE_DIR AND MYSQL_LIBRARIES)
     set(MYSQL_FOUND TRUE CACHE INTERNAL "MySQL found")
     message(STATUS "Found MySQL: ${MYSQL_INCLUDE_DIR}, ${MYSQL_LIBRARIES}")
