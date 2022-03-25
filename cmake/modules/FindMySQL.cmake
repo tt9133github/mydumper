@@ -43,8 +43,6 @@ function(INITIALIZE EXEC)
             ARGS --libs_r
             OUTPUT_VARIABLE MY_TMP)
 
-        set(MYSQL_ADD_LIBRARIES "")
-
         # prepend space in order to match separate words only (e.g. rather
         # than "-linux" from within "-L/usr/lib/i386-linux-gnu")
         string(REGEX MATCHALL " +-l[^ ]*" MYSQL_LIB_LIST " ${MY_TMP}")
@@ -53,8 +51,6 @@ function(INITIALIZE EXEC)
             list(APPEND MYSQL_ADD_LIBRARIES "${MY_LIB}")
         endforeach(MY_LIB ${MYSQL_LIBS})
 
-        set(MYSQL_ADD_LIBRARY_PATH "")
-
         string(REGEX MATCHALL " +-L[^ ]*" MYSQL_LIBDIR_LIST " ${MY_TMP}")
         foreach(MY_LIB ${MYSQL_LIBDIR_LIST})
             string(REGEX REPLACE "[ ]*-L([^ ]*)" "\\1" MY_LIB "${MY_LIB}")
@@ -62,7 +58,6 @@ function(INITIALIZE EXEC)
         endforeach(MY_LIB ${MYSQL_LIBS})
 
     else(M_CONFIG)
-        set(MYSQL_ADD_LIBRARIES "")
         list(APPEND MYSQL_ADD_LIBRARIES "mysqlclient")
     endif(M_CONFIG)
 endfunction()
@@ -72,6 +67,9 @@ endfunction()
 if(UNIX) 
     set(MYSQL_CONFIG_PREFER_PATH "$ENV{MYSQL_HOME}/bin" CACHE FILEPATH
         "preferred path to MySQL (mysql_config)")
+    set(MYSQL_ADD_LIBRARIES "")
+    set(MYSQL_ADD_LIBRARY_PATH "")
+    set(MYSQL_ADD_LIBRARIES "")
     initialize( mysql_config )
     initialize( mariadb_config )
 
